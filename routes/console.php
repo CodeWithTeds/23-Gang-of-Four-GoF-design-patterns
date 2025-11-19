@@ -7,7 +7,10 @@ use App\Patterns\AbstractFactory\ModernFurnitureFactory;
 use App\Patterns\AbstractFactory\VictorianFurnitureFactory;
 use App\Patterns\AbstractFactory\ArtDecoFurnitureFactory;
 use App\Patterns\AbstractFactory\FurnitureFactory;
-
+use App\Patterns\Builder\SimpleHouseBuilder;
+use App\Patterns\Builder\LuxuryHouseBuilder;
+use App\Patterns\Builder\Director;
+use App\Patterns\Builder\ModernHouseBuilder;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -58,6 +61,36 @@ Artisan::command('gof:abstract-factory {family=modern}', function (string $famil
         $this->info($sofa->lounge());
         $this->info($chair->sit());
 
+    }catch(InvalidArgumentException $e){
+        $this->error($e->getMessage());
+    }
+});
+
+/**
+ *
+ * builder design pattern
+ */
+
+
+Artisan::command('gof:builder {type=simple} {--rooms=3} {--garage} {--garden}', function (string $type){
+    $rooms = (int) $this->option('rooms');
+    $garage = (bool) $this->option('garage');
+    $garden = (bool) $this->option('garden');
+
+    $this->comment("Builder demo (House): type=$type rooms=$rooms garage=" . ($garage ? 'yes' : 'no') . " garden=" . ($garden ? 'yes' : 'no'));
+
+    try{
+        $builder = match (strtolower($type)){
+            'simple' => new SimpleHouseBuilder(),
+            'luxury' => new LuxuryHouseBuilder(),
+            'modern' => new ModernHouseBuilder(),
+            'default' => throw new InvalidArgumentException("Uknown Builder: . {$type}"),
+        };
+
+        $director = new Director();
+        $house = $director->construct($builder, $rooms, $garage, $garden);
+
+        $this->comment('Builder class'. get_class($builder));
     }catch(InvalidArgumentException $e){
         $this->error($e->getMessage());
     }
