@@ -14,6 +14,7 @@ use App\Patterns\Builder\ModernHouseBuilder;
 use App\Patterns\Prototype\Circle;
 use App\Patterns\Prototype\Rectangle;
 use App\Patterns\Prototype\Square;
+use App\Patterns\Singleton\Logger;
 
 use function Symfony\Component\String\s;
 
@@ -139,6 +140,33 @@ Artisan::command('gof:prototype {type=circle} {--x=0} {--y=0} {--size=50} {--fil
         $this->comment('Clone class: ' .get_class($clone));
         $this->info('Original: '.$prototype->describe());
         $this->info('Clone: ' .$clone->describe());
+    } catch (Throwable $e) {
+        $this->error($e->getMessage());
+    }
+});
+
+
+Artisan::command('gof:singleton {messages*}', function (array $messages) {
+
+    $this->comment("Singleton Logger Demo: logging message via shared instance");
+
+    try {
+
+        $loggerA = Logger::getInstance();
+        $loggerB = Logger::getInstance();
+
+        $this->comment("Logger ID (A): ".$loggerA->getId());
+        $this->comment("Logger ID (B): ".$loggerB->getId());
+
+        foreach ($messages as $msg){
+            $loggerA->log($msg);
+        }
+
+        $logsFromA = $loggerA->getLogs();
+        $logsFromB = $loggerB->getLogs();
+
+        $this->info("Logs (from A):" .json_encode($logsFromA));
+        $this->info("Logs (from B):" .json_encode($logsFromB));
     } catch (Throwable $e) {
         $this->error($e->getMessage());
     }
