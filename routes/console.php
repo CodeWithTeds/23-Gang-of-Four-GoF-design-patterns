@@ -15,6 +15,12 @@ use App\Patterns\Prototype\Circle;
 use App\Patterns\Prototype\Rectangle;
 use App\Patterns\Prototype\Square;
 use App\Patterns\Singleton\Logger;
+use App\Patterns\Adapter\RoundHole;
+use App\Patterns\Adapter\RoundPeg;
+use App\Patterns\Adapter\RoundPegInterface;
+use App\Patterns\Adapter\SquarePeg;
+use App\Patterns\Adapter\SquarePegAdapter;
+
 
 use function Symfony\Component\String\s;
 
@@ -168,6 +174,41 @@ Artisan::command('gof:singleton {messages*}', function (array $messages) {
         $this->info("Logs (from A):" .json_encode($logsFromA));
         $this->info("Logs (from B):" .json_encode($logsFromB));
     } catch (Throwable $e) {
+        $this->error($e->getMessage());
+    }
+});
+
+Artisan::command('gof:adapter {peg=round} {--hole=50} {--size=30}', function (string $peg) {
+    $holeRadius = (float) $this->option('hole');
+    $size = (float) $this->option('size');
+
+    $this->comment("Adapter demo (peg-in-hole): peg=$peg hole=$holeRadius size=$size");
+    $hole = new RoundHole($holeRadius);
+
+    try {
+        switch (strtolower($peg)) {
+            case 'round':
+                $roundPeg = new RoundPeg($size);
+                $fits = $hole->fits($roundPeg);
+                $this->comment($hole->describe());
+                $this->comment($roundPeg->describe());
+                $this->info($fits ? 'Result: round peg FITS the hole' : 'Result: round peg DOES NOT fit the hole');
+                break;
+
+            case 'square':
+                $squarePeg = new SquarePeg($size);
+                $adapter = new SquarePegAdapter($squarePeg);
+                $fits = $hole->fits($adapter);
+                $this->comment($hole->describe());
+                $this->comment($adapter->describe());
+                $this->info($fits ? 'Result: square peg FITS the hole' : 'Result: square peg DOES NOT fit the hole');
+                break;
+
+            default:
+                throw new InvalidArgumentException("Uknown peg type: {$peg}");
+            }
+
+    }catch(Throwable $e){
         $this->error($e->getMessage());
     }
 });

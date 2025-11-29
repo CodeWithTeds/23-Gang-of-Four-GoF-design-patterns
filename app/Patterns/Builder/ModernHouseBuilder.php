@@ -22,7 +22,7 @@ class ModernHouseBuilder implements HouseBuilder
         $this->house->setWalls('Glass + Steel Frame Modern Architecture');
     }
 
-    public function buildRoof(): void
+    public function buildRoof(): void  
     {
         $this->house->setRoof('Flat Concrete Roof with Skylights');
     }

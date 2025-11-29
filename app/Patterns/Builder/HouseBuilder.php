@@ -13,6 +13,5 @@ interface HouseBuilder
   public function addGarage(): void;
   public function addRooms(int $count): void;
   public function addGarden(): void;
-  public function getHouse(): House;
-
+  public function getHouse(): House;  
 }
