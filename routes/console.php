@@ -20,7 +20,11 @@ use App\Patterns\Adapter\RoundPeg;
 use App\Patterns\Adapter\RoundPegInterface;
 use App\Patterns\Adapter\SquarePeg;
 use App\Patterns\Adapter\SquarePegAdapter;
-
+use App\Patterns\Bridge\Blue;
+use App\Patterns\Bridge\Green;
+use App\Patterns\Bridge\Red;
+use App\Patterns\Bridge\Circle as BridgeCircle;
+use App\Patterns\Bridge\Rectangle as BridgeRectangle;
 
 use function Symfony\Component\String\s;
 
@@ -208,6 +212,40 @@ Artisan::command('gof:adapter {peg=round} {--hole=50} {--size=30}', function (st
                 throw new InvalidArgumentException("Uknown peg type: {$peg}");
             }
 
+    }catch(Throwable $e){
+        $this->error($e->getMessage());
+    }
+});
+
+
+Artisan::command('gof:Bridge {shape=circle} {--color=red} {--size=50}', function (string $shape){
+    $colorOpt = strtolower((string) $this->option('color'));
+    $size = (int) $this->option('size');
+
+    $this->comment("bridge demo (shape + color) : shape=$shape color=$colorOpt size=$size");
+
+    $color = match ($colorOpt){
+        'red' => new Red(),
+        'green' => new Green(),
+        'blue' => new Blue(),
+        'default' => throw new InvalidArgumentException("Uknown bridge: . {$colorOpt}"),
+    };
+
+    try{
+        switch (strtolower($shape)){
+            case 'circle':
+                $obj = new BridgeCircle($color);
+                $obj->setRadius($size);
+                $this->info($obj->draw());
+                break;
+            case 'rectangle':
+                $obj = new BridgeRectangle($color);
+                $obj->setSize($size, $size);
+                $this->info($obj->draw());
+                break;
+            default:
+                throw new InvalidArgumentException("Uknown shape: {$shape}");
+        }
     }catch(Throwable $e){
         $this->error($e->getMessage());
     }
