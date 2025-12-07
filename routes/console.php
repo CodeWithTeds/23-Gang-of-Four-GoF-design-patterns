@@ -25,6 +25,8 @@ use App\Patterns\Bridge\Green;
 use App\Patterns\Bridge\Red;
 use App\Patterns\Bridge\Circle as BridgeCircle;
 use App\Patterns\Bridge\Rectangle as BridgeRectangle;
+use App\Patterns\Composite\OrderBundle;
+use App\Patterns\Composite\OrderItem;
 
 use function Symfony\Component\String\s;
 
@@ -249,4 +251,45 @@ Artisan::command('gof:Bridge {shape=circle} {--color=red} {--size=50}', function
     }catch(Throwable $e){
         $this->error($e->getMessage());
     }
+});
+
+Artisan::command('gof:composite {--discount=10} {--nested}', function () {
+    $discount = (float) $this->option('discount');
+    $nested = (bool) $this->option('nested');
+
+    $this->comment("Composite demo (complex order): discount=$discount% nested=".($nested?'yes':'no'));
+
+    $order = new OrderBundle('Customer Order');
+
+    // Base items
+    $order->add(new OrderItem('Laptop', 1200.00, 1));
+    $order->add(new OrderItem('Mouse', 25.00, 2));
+
+    // Office kit bundle
+    $officekit = new OrderBundle('Office Kit');
+    $officekit->add(new OrderItem('Notebook', 5.00, 3));
+    $officekit->add(new OrderItem('Pen', 2.00, 5));
+
+    if ($discount > 0) {
+        $officekit->setDiscountPercent($discount);
+    }
+
+    if ($nested) {
+        $accessoryPack = new OrderBundle('Accessory Pack');
+        $accessoryPack->add(new OrderItem('Headset', 40.00, 1));
+        $accessoryPack->add(new OrderItem('USB Hub', 20.00, 1));
+        $accessoryPack->add(new OrderItem('Mouse Pad', 8.00, 1));
+        $officekit->add($accessoryPack);
+
+        // Only add if created
+        $order->add($accessoryPack);
+    }
+
+    // Add officekit to order
+    $order->add($officekit);
+
+    $this->info('Composite Pattern demo: Complex Order');
+    $this->line($order->describe());
+
+    $this->info(sprintf('Grand total: $%.2f', $order->getTotal()));
 });
