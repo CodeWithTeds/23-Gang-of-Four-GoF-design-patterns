@@ -148,10 +148,10 @@ Artisan::command('gof:prototype {type=circle} {--x=0} {--y=0} {--size=50} {--fil
         $clone->setPosition($x, $y);
         $clone->setStyle($fill, $stroke);
 
-        $this->comment('Prototype Class: ' .get_class($prototype));
-        $this->comment('Clone class: ' .get_class($clone));
-        $this->info('Original: '.$prototype->describe());
-        $this->info('Clone: ' .$clone->describe());
+        $this->comment('Prototype Class: ' . get_class($prototype));
+        $this->comment('Clone class: ' . get_class($clone));
+        $this->info('Original: ' . $prototype->describe());
+        $this->info('Clone: ' . $clone->describe());
     } catch (Throwable $e) {
         $this->error($e->getMessage());
     }
@@ -167,18 +167,18 @@ Artisan::command('gof:singleton {messages*}', function (array $messages) {
         $loggerA = Logger::getInstance();
         $loggerB = Logger::getInstance();
 
-        $this->comment("Logger ID (A): ".$loggerA->getId());
-        $this->comment("Logger ID (B): ".$loggerB->getId());
+        $this->comment("Logger ID (A): " . $loggerA->getId());
+        $this->comment("Logger ID (B): " . $loggerB->getId());
 
-        foreach ($messages as $msg){
+        foreach ($messages as $msg) {
             $loggerA->log($msg);
         }
 
         $logsFromA = $loggerA->getLogs();
         $logsFromB = $loggerB->getLogs();
 
-        $this->info("Logs (from A):" .json_encode($logsFromA));
-        $this->info("Logs (from B):" .json_encode($logsFromB));
+        $this->info("Logs (from A):" . json_encode($logsFromA));
+        $this->info("Logs (from B):" . json_encode($logsFromB));
     } catch (Throwable $e) {
         $this->error($e->getMessage());
     }
@@ -212,29 +212,28 @@ Artisan::command('gof:adapter {peg=round} {--hole=50} {--size=30}', function (st
 
             default:
                 throw new InvalidArgumentException("Uknown peg type: {$peg}");
-            }
-
-    }catch(Throwable $e){
+        }
+    } catch (Throwable $e) {
         $this->error($e->getMessage());
     }
 });
 
 
-Artisan::command('gof:Bridge {shape=circle} {--color=red} {--size=50}', function (string $shape){
+Artisan::command('gof:Bridge {shape=circle} {--color=red} {--size=50}', function (string $shape) {
     $colorOpt = strtolower((string) $this->option('color'));
     $size = (int) $this->option('size');
 
     $this->comment("bridge demo (shape + color) : shape=$shape color=$colorOpt size=$size");
 
-    $color = match ($colorOpt){
+    $color = match ($colorOpt) {
         'red' => new Red(),
         'green' => new Green(),
         'blue' => new Blue(),
         'default' => throw new InvalidArgumentException("Uknown bridge: . {$colorOpt}"),
     };
 
-    try{
-        switch (strtolower($shape)){
+    try {
+        switch (strtolower($shape)) {
             case 'circle':
                 $obj = new BridgeCircle($color);
                 $obj->setRadius($size);
@@ -248,7 +247,7 @@ Artisan::command('gof:Bridge {shape=circle} {--color=red} {--size=50}', function
             default:
                 throw new InvalidArgumentException("Uknown shape: {$shape}");
         }
-    }catch(Throwable $e){
+    } catch (Throwable $e) {
         $this->error($e->getMessage());
     }
 });
@@ -257,7 +256,7 @@ Artisan::command('gof:composite {--discount=10} {--nested}', function () {
     $discount = (float) $this->option('discount');
     $nested = (bool) $this->option('nested');
 
-    $this->comment("Composite demo (complex order): discount=$discount% nested=".($nested?'yes':'no'));
+    $this->comment("Composite demo (complex order): discount=$discount% nested=" . ($nested ? 'yes' : 'no'));
 
     $order = new OrderBundle('Customer Order');
 
