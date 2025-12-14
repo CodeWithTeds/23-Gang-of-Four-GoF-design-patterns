@@ -27,6 +27,12 @@ use App\Patterns\Bridge\Circle as BridgeCircle;
 use App\Patterns\Bridge\Rectangle as BridgeRectangle;
 use App\Patterns\Composite\OrderBundle;
 use App\Patterns\Composite\OrderItem;
+use App\Patterns\Decorator\SmsDecorator;
+use App\Patterns\Facade\YTDownloaderFacade;
+use App\Patterns\Facade\FFMpeg;
+use App\Patterns\Facade\FileStorage;
+use App\Patterns\Facade\YT;
+
 
 use function Symfony\Component\String\s;
 
@@ -292,3 +298,27 @@ Artisan::command('gof:composite {--discount=10} {--nested}', function () {
 
     $this->info(sprintf('Grand total: $%.2f', $order->getTotal()));
 });
+
+
+Artisan::command('gof:facade {url} {--format=mp4}', function (string $url) {
+    $format = (string) $this->option('format');
+
+    $this->comment("Facade demo (YouTube downloader): format=$format url=$url");
+
+    $facade = new YTDownloaderFacade(
+        new YT(),
+        new FFMpeg(),
+        new FileStorage(),
+    );
+
+    try {
+        $result = $facade->download($url, $format);
+        $this->info('Downloaded video ID: ' .$result['id']);
+        $this->info('Save as: ' .$result['filename']);
+        $this->info('Path:' .$result['path']);
+    }catch(Throwable $e){
+        $this->error('Download failed: ' . $e->getMessage());
+    }
+});
+
+
