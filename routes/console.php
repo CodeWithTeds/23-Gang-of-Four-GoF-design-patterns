@@ -1,123 +1,144 @@
-<?php
+    <?php
 
-use Illuminate\Foundation\Inspiring;
-use Illuminate\Support\Facades\Artisan;
-use App\Patterns\Factory\TransportFactory;
-use App\Patterns\AbstractFactory\ModernFurnitureFactory;
-use App\Patterns\AbstractFactory\VictorianFurnitureFactory;
-use App\Patterns\AbstractFactory\ArtDecoFurnitureFactory;
-use App\Patterns\AbstractFactory\FurnitureFactory;
-use App\Patterns\Builder\SimpleHouseBuilder;
-use App\Patterns\Builder\LuxuryHouseBuilder;
-use App\Patterns\Builder\Director;
-use App\Patterns\Builder\ModernHouseBuilder;
-use App\Patterns\Prototype\Circle;
-use App\Patterns\Prototype\Rectangle;
-use App\Patterns\Prototype\Square;
-use App\Patterns\Singleton\Logger;
-use App\Patterns\Adapter\RoundHole;
-use App\Patterns\Adapter\RoundPeg;
-use App\Patterns\Adapter\RoundPegInterface;
-use App\Patterns\Adapter\SquarePeg;
-use App\Patterns\Adapter\SquarePegAdapter;
-use App\Patterns\Bridge\Blue;
-use App\Patterns\Bridge\Green;
-use App\Patterns\Bridge\Red;
-use App\Patterns\Bridge\Circle as BridgeCircle;
-use App\Patterns\Bridge\Rectangle as BridgeRectangle;
-use App\Patterns\Composite\OrderBundle;
-use App\Patterns\Composite\OrderItem;
-use App\Patterns\Decorator\SmsDecorator;
-use App\Patterns\Facade\YTDownloaderFacade;
-use App\Patterns\Facade\FFMpeg;
-use App\Patterns\Facade\FileStorage;
-use App\Patterns\Facade\YT;
+    use Illuminate\Foundation\Inspiring;
+    use Illuminate\Support\Facades\Artisan;
+    use App\Patterns\Factory\TransportFactory;
+    use App\Patterns\AbstractFactory\ModernFurnitureFactory;
+    use App\Patterns\AbstractFactory\VictorianFurnitureFactory;
+    use App\Patterns\AbstractFactory\ArtDecoFurnitureFactory;
+    use App\Patterns\AbstractFactory\FurnitureFactory;
+    use App\Patterns\Builder\SimpleHouseBuilder;
+    use App\Patterns\Builder\LuxuryHouseBuilder;
+    use App\Patterns\Builder\Director;
+    use App\Patterns\Builder\ModernHouseBuilder;
+    use App\Patterns\Prototype\Circle;
+    use App\Patterns\Prototype\Rectangle;
+    use App\Patterns\Prototype\Square;
+    use App\Patterns\Singleton\Logger;
+    use App\Patterns\Adapter\RoundHole;
+    use App\Patterns\Adapter\RoundPeg;
+    use App\Patterns\Adapter\RoundPegInterface;
+    use App\Patterns\Adapter\SquarePeg;
+    use App\Patterns\Adapter\SquarePegAdapter;
+    use App\Patterns\Bridge\Blue;
+    use App\Patterns\Bridge\Green;
+    use App\Patterns\Bridge\Red;
+    use App\Patterns\Bridge\Circle as BridgeCircle;
+    use App\Patterns\Bridge\Rectangle as BridgeRectangle;
+    use App\Patterns\Composite\OrderBundle;
+    use App\Patterns\Composite\OrderItem;
+    use App\Patterns\Facade\YTDownloaderFacade;
+    use App\Patterns\Facade\FFMpeg;
+    use App\Patterns\Facade\FileStorage;
+    use App\Patterns\Facade\YT;
+    use App\Patterns\Decorator\SmsDecorator;
+    use App\Patterns\Decorator\BasicNotifier;
+    use App\Patterns\Decorator\SlackDecorator;
+    use App\Patterns\Decorator\FacebookDecorator;
+    use App\Patterns\Flyweight\MovingParticle;
+    use App\Patterns\Flyweight\ParticleFactory;
+    use App\Patterns\Flyweight\ParticleUnit;
+    use App\Patterns\Proxy\PaymentProxy;
 
+    use function Symfony\Component\String\s;
 
-use function Symfony\Component\String\s;
+    Artisan::command('inspire', function () {
+        $this->comment(Inspiring::quote());
+    })->purpose('Display an inspiring quote');
 
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
+    /**
+     * factory
+     * creational design pattern
+     * its let you to create a interface for an object in a superclass
+     * that lets you create objects without exposing
+     * the exact class that will be instantiated
+     *
+     * it works by defining an interface (or abstract class)
+     * and letting subclasses decide which concrete object to create.
+     *
+     * its useful when object creation logic is complex
+     */
+    Artisan::command('gof:factory {type=bike}', function (string $type) {
+        $this->comment('Factory demo: creating a transport for type: ' . $type);
 
-/**
- * factory
- * creational design pattern
- * its let you to create a interface for an object in a superclass
- */
-Artisan::command('gof:factory {type=bike}', function (string $type) {
-    $this->comment('Factory demo: creating a transport for type: ' . $type);
-
-    try {
-        $transport = TransportFactory::create($type);
-        $this->comment('Created: ' . get_class($transport));
-        $this->info($transport->deliver());
-    } catch (InvalidArgumentException $e) {
-        $this->error($e->getMessage());
-    }
-});
-
-
-/**
- * Abstract Factory
- * Creational Design pattern
- * Its let you produce a family of object
- * without specifying a concrete classes
- *
- */
-
-Artisan::command('gof:abstract-factory {family=modern}', function (string $family) {
-    $this->comment('Abstract Factory demo: (furniture): creating family: ' . $family);
-
-    try {
-        $factory = match (strtolower($family)) {
-            'modern' => new ModernFurnitureFactory(),
-            'victorian' => new VictorianFurnitureFactory(),
-            'art' => new ArtDecoFurnitureFactory(),
-            'default' => throw new InvalidArgumentException("Uknown family:" . $family),
-        };
-
-        $chair = $factory->createChair();
-        $sofa = $factory->createSofa();
-
-        $this->comment('Chair Class: ' . get_class($chair));
-        $this->comment('Sofa Class: ' . get_class($sofa));
-        $this->info($sofa->lounge());
-        $this->info($chair->sit());
-    } catch (InvalidArgumentException $e) {
-        $this->error($e->getMessage());
-    }
-});
-
-/**
- *
- * builder design pattern
- */
-Artisan::command('gof:builder {type=simple} {--rooms=3} {--garage} {--garden}', function (string $type) {
-    $rooms = (int) $this->option('rooms');
-    $garage = (bool) $this->option('garage');
-    $garden = (bool) $this->option('garden');
-
-    $this->comment("Builder demo (House): type=$type rooms=$rooms garage=" . ($garage ? 'yes' : 'no') . " garden=" . ($garden ? 'yes' : 'no'));
-
-    try {
-        $builder = match (strtolower($type)) {
-            'simple' => new SimpleHouseBuilder(),
-            'luxury' => new LuxuryHouseBuilder(),
-            'modern' => new ModernHouseBuilder(),
-            'default' => throw new InvalidArgumentException("Uknown Builder: . {$type}"),
-        };
-
-        $director = new Director();
-        $house = $director->construct($builder, $rooms, $garage, $garden);
-
-        $this->comment('Builder class' . get_class($builder));
-    } catch (InvalidArgumentException $e) {
-        $this->error($e->getMessage());
-    }
-});
+        try {
+            $transport = TransportFactory::create($type);
+            $this->comment('Created: ' . get_class($transport));
+            $this->info($transport->deliver());
+        } catch (InvalidArgumentException $e) {
+            $this->error($e->getMessage());
+        }
+    });
 
 
+    /**
+     * Abstract Factory
+     * Creational Design pattern
+     * Its let you produce a family of object
+     * without specifying a concrete classes
+     *
+     */
+
+    Artisan::command('gof:abstract-factory {family=modern}', function (string $family) {
+        $this->comment('Abstract Factory demo: (furniture): creating family: ' . $family);
+
+        try {
+            $factory = match (strtolower($family)) {
+                'modern' => new ModernFurnitureFactory(),
+                'victorian' => new VictorianFurnitureFactory(),
+                'art' => new ArtDecoFurnitureFactory(),
+                'default' => throw new InvalidArgumentException("Uknown family:" . $family),
+            };
+
+            $chair = $factory->createChair();
+            $sofa = $factory->createSofa();
+
+            $this->comment('Chair Class: ' . get_class($chair));
+            $this->comment('Sofa Class: ' . get_class($sofa));
+            $this->info($sofa->lounge());
+            $this->info($chair->sit());
+        } catch (InvalidArgumentException $e) {
+            $this->error($e->getMessage());
+        }
+    });
+
+    /**
+     * builder design pattern
+     * is a Creational Design pattern
+     * that let you construct a complex object
+     * in a step by step way
+     *
+     * its like building a house in step by step way but different implementation!
+     * this pattern allow you to produce different type of object using same construction code.
+     */
+    Artisan::command('gof:builder {type=simple} {--rooms=3} {--garage} {--garden}', function (string $type) {
+        $rooms = (int) $this->option('rooms');
+        $garage = (bool) $this->option('garage');
+        $garden = (bool) $this->option('garden');
+
+        $this->comment("Builder demo (House): type=$type rooms=$rooms garage=" . ($garage ? 'yes' : 'no') . " garden=" . ($garden ? 'yes' : 'no'));
+
+        try {
+            $builder = match (strtolower($type)) {
+                'simple' => new SimpleHouseBuilder(),
+                'luxury' => new LuxuryHouseBuilder(),
+                'modern' => new ModernHouseBuilder(),
+                'default' => throw new InvalidArgumentException("Uknown Builder: . {$type}"),
+            };
+
+            $director = new Director();
+            $house = $director->construct($builder, $rooms, $garage, $garden);
+
+            $this->comment('Builder class' . get_class($builder));
+        } catch (InvalidArgumentException $e) {
+            $this->error($e->getMessage());
+        }
+    });
+
+    /**
+     * Prototype is a creational design pattern that lets you
+     * copy existing objects without making your code dependent on their classes.
+     */
 Artisan::command('gof:prototype {type=circle} {--x=0} {--y=0} {--size=50} {--fill=red} {--stroke=1}', function (string $type) {
     $x = (int) $this->option('x');
     $y = (int) $this->option('y');
@@ -163,7 +184,10 @@ Artisan::command('gof:prototype {type=circle} {--x=0} {--y=0} {--size=50} {--fil
     }
 });
 
-
+/**
+ * is a creational design pattern that lets
+ * you ensure that a class has only one instance
+ */
 Artisan::command('gof:singleton {messages*}', function (array $messages) {
 
     $this->comment("Singleton Logger Demo: logging message via shared instance");
@@ -190,6 +214,16 @@ Artisan::command('gof:singleton {messages*}', function (array $messages) {
     }
 });
 
+/**
+ * Adapter is a structural design pattern
+ * that allows objects with incompatible interfaces to collaborate.
+ * its like using a power plug adapter:
+ * the plug does not fit the socket directly,
+ * so the adapter makes them compatible without changing the plug.
+ *
+ * this pattern is useful when you want to reuse existing classes
+ * but their interfaces do not match what the client expects.
+*/
 Artisan::command('gof:adapter {peg=round} {--hole=50} {--size=30}', function (string $peg) {
     $holeRadius = (float) $this->option('hole');
     $size = (float) $this->option('size');
@@ -224,7 +258,18 @@ Artisan::command('gof:adapter {peg=round} {--hole=50} {--size=30}', function (st
     }
 });
 
-
+/**
+ * Bridge is a structural design pattern that separates the two main parts:
+ * the abstraction and the implementation.
+ * The abstraction defines the high-level behavior,
+ * while the implementation handles the specific, detailed logic.
+ * Both can change independently without affecting each other.
+ *
+ * Remote → Abstraction
+ * TV (Sony, LG, Samsung) → Implementation
+ * Seperating the idea into reality
+ *
+ */
 Artisan::command('gof:Bridge {shape=circle} {--color=red} {--size=50}', function (string $shape) {
     $colorOpt = strtolower((string) $this->option('color'));
     $size = (int) $this->option('size');
@@ -258,6 +303,17 @@ Artisan::command('gof:Bridge {shape=circle} {--color=red} {--size=50}', function
     }
 });
 
+/**
+ * its a Structural design pattern that let you compose a object into tree structure
+ *
+ * and then work with these structures as if they were individual objects.
+ * its like putting items into a box, then putting that box
+ * into a bigger box, and still treating everything as just
+ * "one item" when you count or use it.
+ *
+ * whether its a single product or a bundle of products,
+ * you interact with them the same way.
+ */
 Artisan::command('gof:composite {--discount=10} {--nested}', function () {
     $discount = (float) $this->option('discount');
     $nested = (bool) $this->option('nested');
@@ -299,7 +355,53 @@ Artisan::command('gof:composite {--discount=10} {--nested}', function () {
     $this->info(sprintf('Grand total: $%.2f', $order->getTotal()));
 });
 
+/**
+ * is a structural design pattern that lets you attach new behaviors
+ * to objects by placing these objects
+ * inside special wrapper objects that contain the behaviors.
+ *
+ * layman's term:
+ * its like putting layers on something.
+ * you start with a basic object, then wrap it with
+ * additional features one by one (SMS, Slack, Facebook).
+ *
+ * each wrapper adds a new behavior, and you can combine
+ * them in any order you want.
+ */
+Artisan::command('gof:decorator {message} {--sms} {--slack} {--fb}', function (string $message) {
+    $sms = (bool) $this->option('sms');
+    $slack = (bool) $this->option('slack');
+    $fb = (bool) $this->option('fb');
 
+    $this->comment( "Decorator demo (notifier): message='{$message}' "
+            . "sms=" . ($sms ? 'on' : 'off') . " "
+            . "slack=" . ($slack ? 'on' : 'off') . " "
+            . "fb=" . ($fb ? 'on' : 'off')
+    );
+
+    $notifier = new BasicNotifier();
+
+    if($sms) {
+        $notifier = new SmsDecorator($notifier);
+    }
+    if($slack){
+        $notifier = new SlackDecorator($notifier);
+    }
+    if($fb) {
+        $notifier = new FacebookDecorator($notifier);
+    }
+
+});
+
+/**
+ * Facade is a structural design pattern that provides a simplified
+ * interface to a library, a framework, or any other complex set of classes.
+ * layman's term:
+ * its like pressing one button instead of
+ * manually doing many steps.
+ * you dont need to know how things work inside,
+ * you just use the simple interface.
+ */
 Artisan::command('gof:facade {url} {--format=mp4}', function (string $url) {
     $format = (string) $this->option('format');
 
@@ -313,11 +415,83 @@ Artisan::command('gof:facade {url} {--format=mp4}', function (string $url) {
 
     try {
         $result = $facade->download($url, $format);
-        $this->info('Downloaded video ID: ' .$result['id']);
-        $this->info('Save as: ' .$result['filename']);
-        $this->info('Path:' .$result['path']);
-    }catch(Throwable $e){
+        $this->info('Downloaded video ID: ' . $result['id']);
+        $this->info('Save as: ' . $result['filename']);
+        $this->info('Path:' . $result['path']);
+    } catch (Throwable $e) {
         $this->error('Download failed: ' . $e->getMessage());
+    }
+});
+
+
+/**
+ * Its a Structural Design pattern that lets you fit more object into the
+ * available amount of RAM
+ *
+ * store shared data once, and let everybody reuse it.
+ * its like having one design and letting thousands
+ * of objects reuse it, instead of copying it
+ * over and over again.
+ */
+Artisan::command('gof:flyweight {--type=spark} {--count=10000} {--size=2}', function (){
+    $typeName = (string) $this->option(('type'));
+    $count = (int) $this->option('count');
+    $size = (int) $this->option('size');
+
+    $this->comment("Flyweight demo (particles): type=$typeName count=$count size=$size");
+
+    $factory = new ParticleFactory();
+    $unit = new ParticleUnit($factory);
+
+    $texture = match ($typeName) {
+        'spark' => 'spark.png',
+        'smoke' => 'smoke.png',
+        'fire' => 'fire.png',
+        default => 'particle.png',
+    };
+    $color = match ($typeName) {
+        'spark' => 'orange',
+        'smoke' => 'gray',
+        'fire' => 'red',
+        default => 'white',
+    };
+
+    $unit->spawn($typeName, $texture, $color, $size, $count);
+
+    $this->comment('Shared particles types: ' .$factory->count());
+    $this->comment('Particles active: ' .$unit->count());
+
+    for ($i = 1; $i <= 3; $i++){
+        $unit->step(1);
+        $this->info('Step '.$i.' active='.$unit->count());
+        $this->line($unit->renderSample(5));
+    }
+});
+
+
+/***
+ * Proxy is a structural design pattern that lets you provide a
+ * substitute or placeholder for another object. A proxy controls access to
+ * the original object, allowing you to perform something either
+ * before or after the request gets through to the original object.
+ *
+ * is a middleman that checks, controls, and protects payment
+ * requests before they reach the real payment system.
+ */
+
+Artisan::command('gof:proxy {amount} {--currency=USD} {--token=tok_demo} {--repeat=3}', function (float $amount) {
+    $currency = (string) $this->option('currency');
+    $token = (string) $this->option('token');
+    $repeat = (int) $this->option('repeat');
+
+    $this->comment("Proxy demo (Payment):  amount=$amount currency=$currency");
+
+    $proxy = new PaymentProxy();
+
+
+    for ($i = 1; $i <= $repeat; $i++){
+        $result = $proxy->charge($amount, $currency, $token);
+        $this->info("Attempt $i: ".$result);
     }
 });
 
