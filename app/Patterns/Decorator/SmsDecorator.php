@@ -9,4 +9,4 @@ class SmsDecorator extends NotifierDecorator
         $base = parent::send($message);
         return $base . "\n".sprintf('SMS:', $message);
     }
-}  
+}

@@ -2,7 +2,7 @@
 
 namespace App\Patterns\Decorator;
 
-class Slack extends NotifierDecorator
+class SlackDecorator extends NotifierDecorator
 {
     public function send(string $message): string
     {
