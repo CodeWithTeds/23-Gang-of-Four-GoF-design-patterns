@@ -16,7 +16,8 @@ class TransportFactory
             'truck' => new Truck(),
             'ship' => new Ship(),
             'car' => new Car(),
-             'default' => throw new InvalidArgumentException("Uknown transport type"),
+            'demo' => new Demo(),
+            'default' => throw new InvalidArgumentException("Uknown transport type"),
         };
     }
 }
