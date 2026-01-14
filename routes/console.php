@@ -46,6 +46,10 @@
     use App\Patterns\ChainOfResponsibility\ControllerHandler;
     use App\Patterns\ChainOfResponsibility\Request as ChainRequest;
 
+    use App\Patterns\Command\CommandInvoker;
+    use App\Patterns\Command\Editor;
+    use App\Patterns\Command\AppendTextCommand;
+    use App\Patterns\Command\ReplaceTextCommand;
 
     use function Symfony\Component\String\s;
 
@@ -517,7 +521,7 @@
         $limit   = (int) $this->option('limit');
         $attempts = (int) $this->option('attempts');
 
-        $this->comment("Chain demo: token=$token roles=".implode(',', $roles)." action=$action limit=$limit attempts=$attempts");
+        $this->comment("Chain demo: token=$token roles=" . implode(',', $roles) . " action=$action limit=$limit attempts=$attempts");
 
         $rate = new RateLimitHandler($limit);
         $authn = new AuthenticationHandler();
@@ -526,13 +530,12 @@
 
         $rate->setNext($authn)->setNext($authz)->setNext($ctrl);
 
-        for($i = 1; $i <= $attempts; $i++){
+        for ($i = 1; $i <= $attempts; $i++) {
             $req = new ChainRequest($token, $roles, $action);
             $result = $rate->handle($req);
-            $this->info("attempt $i: " .$result);
+            $this->info("attempt $i: " . $result);
         }
     });
-
 
     /**
      * Command is a behavioral design pattern that turns a request
@@ -540,3 +543,23 @@
      * This transformation lets you pass requests as a method arguments, delay or
      * queue a request’s execution, and support undoable operations.
      */
+
+    Artisan::command('gof:command {--undo=2}', function () {
+        $undo = (int) $this->option('undo');
+
+        $editor = new Editor();
+        $invoker = new CommandInvoker();
+
+        $this->comment('Command demo (editor): start text=""');
+        $s1 = $invoker->run(new AppendTextCommand($editor, 'Hello'));
+        $this->info('Exec append "Hello": ' . $s1);
+        $s2 = $invoker->run(new AppendTextCommand($editor, 'World'));
+        $this->info('Exec append "World": ' . $s2);
+        $s3 = $invoker->run(new ReplaceTextCommand($editor, 'Hi'));
+        $this->info('Exec replace "Hi" : ' . $s3);
+
+        $undos = $invoker->undo($undo);
+        foreach ($undos as $i => $state) {
+            $this->info('Undo #' . ($i + 1) . ': ' . $state);
+        }
+    });
