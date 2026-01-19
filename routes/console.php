@@ -50,6 +50,10 @@
     use App\Patterns\Command\Editor;
     use App\Patterns\Command\AppendTextCommand;
     use App\Patterns\Command\ReplaceTextCommand;
+    use App\Patterns\Iterator\SocialGraphNetwork;
+    use Pest\Configuration\Project;
+
+    use App\Patterns\Iterator\Profile;
 
     use function Symfony\Component\String\s;
 
@@ -563,3 +567,61 @@
             $this->info('Undo #' . ($i + 1) . ': ' . $state);
         }
     });
+
+    /**
+     * Iterator is a behavioral design pattern that lets you traverse elements
+     * of a collection without exposing its underlying representation
+     * (list, stack, tree, etc.).
+     *
+     * Iterator = access elements one by one without knowing how they’re stored.
+     */
+
+    Artisan::command('gof:iterator {--user=alice} {--relation=friends} {--limit=5}', function () {
+        $user = (string) $this->option('user');
+        $relation = strtolower((string) $this->option('relation'));
+        $limit = (int) $this->option('limit');
+
+        $this->comment("Iterator demo(social): user=$user relation=$relation limit=$limit");
+
+        $net = new SocialGraphNetwork();
+
+        $alice = new Profile('alice', 'Alice');
+        $bob = new Profile('bob', 'Bob');
+        $carol = new Profile('carol', 'Carol');
+        $dave  = new Profile('dave', 'Dave');
+        $erin  = new Profile('erin', 'Erin');
+
+        $alice->addFriend('bob');
+        $bob->addFriend('alice');
+        $alice->addFriend('carol');
+        $carol->addFriend('alice');
+        $bob->addFriend('dave');
+        $dave->addFriend('bob');
+
+        $alice->addFollower('erin');
+        $alice->addFollower('dave');
+        $carol->addFollower('alice');
+
+        foreach ([$alice, $bob, $carol, $dave, $erin] as $p) {
+            $net->addProfile($p);
+        }
+
+        $it = match ($relation) {
+            'friends' => $net->createFriendsIterator($user),
+            'followers' => $net->createFollowersIterator($user),
+            default => $net->createFriendsIterator($user),
+        };
+
+        $count = 0;
+        while ($it->hasNext() && $count < $limit) {
+            $p = $it->next();
+
+            if ($p) {
+                $this->info($p->getId().': '.$p->getName());
+                $count++;
+            }else {
+                break;
+            }
+        }
+    });
+
