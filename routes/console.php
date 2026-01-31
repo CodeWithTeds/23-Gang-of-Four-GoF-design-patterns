@@ -39,21 +39,21 @@
     use App\Patterns\Flyweight\ParticleFactory;
     use App\Patterns\Flyweight\ParticleUnit;
     use App\Patterns\Proxy\PaymentProxy;
-
     use App\Patterns\ChainOfResponsibility\RateLimitHandler;
     use App\Patterns\ChainOfResponsibility\AuthenticationHandler;
     use App\Patterns\ChainOfResponsibility\AuthorizationHandler;
     use App\Patterns\ChainOfResponsibility\ControllerHandler;
     use App\Patterns\ChainOfResponsibility\Request as ChainRequest;
-
     use App\Patterns\Command\CommandInvoker;
     use App\Patterns\Command\Editor;
     use App\Patterns\Command\AppendTextCommand;
     use App\Patterns\Command\ReplaceTextCommand;
     use App\Patterns\Iterator\SocialGraphNetwork;
     use Pest\Configuration\Project;
-
     use App\Patterns\Iterator\Profile;
+    use App\Patterns\Mediator\ChatRoom;
+    use App\Patterns\Mediator\User as MediatorUser;
+
 
     use function Symfony\Component\String\s;
 
@@ -617,11 +617,58 @@
             $p = $it->next();
 
             if ($p) {
-                $this->info($p->getId().': '.$p->getName());
+                $this->info($p->getId() . ': ' . $p->getName());
                 $count++;
-            }else {
+            } else {
                 break;
             }
         }
     });
 
+
+    /**
+     * Mediator is a behavioral design pattern that lets you reduce
+     * chaotic dependencies between objects. The pattern restricts direct
+     * communications between the objects and forces them to collaborate only via a mediator object.
+     * Instead of everyone talking to everyone directly (which gets messy),
+     * everyone talks to ONE middleman, and that middleman handles who gets
+     * the message and what happens next.
+     */
+
+    Artisan::command('gof:mediator {--sender=alice} {--target=} {--message=Hello}', function () {
+        $message = (string) $this->option('message');
+        $sender = (string) $this->option('sender');
+        $targetOpt = (string) $this->option('target');
+        $target = $targetOpt !== '' ? strtolower($targetOpt) : '';
+
+        $this->comment("Mediator demo (chat): sender=$sender target=" . ($target ?: 'broadcast') . " message='$message'");
+        $room = new ChatRoom();
+        $alice = new MediatorUser('alice', 'Alice', $room);
+        $bob = new MediatorUser('bob', 'Bob', $room);
+        $carol = new MediatorUser('carol', 'Carol', $room);
+
+        foreach ([$alice, $bob, $carol] as $u) {
+            $room->register($u);
+        }
+
+        $users = [
+            'alice' => $alice,
+            'bob' => $bob,
+            'carol' => $carol,
+        ];
+
+        $from = $users[$sender] ?? $alice;
+        $to = $target ? ($users[$target] ?? null) : null;
+
+        $messages  = $to ? $from->whisper($to, $message) : ($from->say($message));
+
+        if($messages){
+            foreach ($messages as $message){
+                $this->info($message);
+            }
+
+        }else{
+            $this->info('No recipients');
+        }
+
+    });
